@@ -6,17 +6,31 @@ let currentUserId = localStorage.getItem('userId');
 let refreshInterval;
 
 if (token) {
-  socket.emit('authenticate', token);
-  socket.on('authenticated', () => {
-    showChat();
-    loadUsers();
-    loadGroups();
-    restoreTarget();
-    startAutoRefresh();
-    if (isOwner) {
-      document.getElementById('adminBtn').style.display = 'block';
-    }
-  });
+  // Verify token and get user info
+  try {
+    const base64Url = token.split('.')[1];
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    const payload = JSON.parse(atob(base64));
+    
+    isOwner = payload.isOwner || false;
+    currentUsername = payload.username;
+    currentUserId = payload.id;
+    
+    socket.emit('authenticate', token);
+    socket.on('authenticated', () => {
+      showChat();
+      loadUsers();
+      loadGroups();
+      restoreTarget();
+      startAutoRefresh();
+      if (isOwner) {
+        document.getElementById('adminBtn').style.display = 'block';
+      }
+    });
+  } catch (e) {
+    console.error('Invalid token:', e);
+    localStorage.removeItem('token');
+  }
 }
 
 document.getElementById('loginBtn').onclick = () => {
@@ -34,12 +48,12 @@ document.getElementById('loginBtn').onclick = () => {
     btn.textContent = 'Login';
     if (data.token) {
       localStorage.setItem('token', data.token);
-      localStorage.setItem('isOwner', data.isOwner ? 'true' : 'false');
+      localStorage.setItem('isOwner', data.user.isOwner ? 'true' : 'false');
       localStorage.setItem('username', username);
-      localStorage.setItem('userId', data.id);
-      isOwner = data.isOwner;
+      localStorage.setItem('userId', data.user.id);
+      isOwner = data.user.isOwner;
       currentUsername = username;
-      currentUserId = data.id;
+      currentUserId = data.user.id;
       socket.emit('authenticate', data.token);
       socket.on('authenticated', () => {
         showChat();
@@ -73,12 +87,12 @@ document.getElementById('registerBtn').onclick = () => {
     btn.textContent = 'Register';
     if (data.token) {
       localStorage.setItem('token', data.token);
-      localStorage.setItem('isOwner', data.isOwner ? 'true' : 'false');
+      localStorage.setItem('isOwner', data.user.isOwner ? 'true' : 'false');
       localStorage.setItem('username', username);
-      localStorage.setItem('userId', data.id);
-      isOwner = data.isOwner;
+      localStorage.setItem('userId', data.user.id);
+      isOwner = data.user.isOwner;
       currentUsername = username;
-      currentUserId = data.id;
+      currentUserId = data.user.id;
       socket.emit('authenticate', data.token);
       socket.on('authenticated', () => {
         showChat();

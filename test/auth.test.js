@@ -1,14 +1,38 @@
 const request = require('supertest');
-const app = require('../server/server');
+const express = require('express');
 const db = require('../database/db');
 const bcrypt = require('bcryptjs');
 
+// Create a test server that doesn't automatically listen
+const createTestServer = () => {
+  const expressApp = express();
+  expressApp.use(express.json());
+  expressApp.use('/auth', require('../server/routes/auth'));
+  return expressApp;
+};
+
 describe('Authentication API', () => {
+  let testApp;
+
   beforeAll(async () => {
-    // Set up test database
-    await db.run('DELETE FROM users');
+    // Create test app
+    testApp = createTestServer();
+    
+    // Set up test database - use promises to ensure proper async handling
+    await new Promise((resolve, reject) => {
+      db.run('DELETE FROM users', (err) => {
+        if (err) return reject(err);
+        resolve();
+      });
+    });
+    
     const hashedPassword = await bcrypt.hash('testpassword', 10);
-    await db.run('INSERT INTO users (username, password) VALUES (?, ?)', ['testuser', hashedPassword]);
+    await new Promise((resolve, reject) => {
+      db.run('INSERT INTO users (username, password) VALUES (?, ?)', ['testuser', hashedPassword], (err) => {
+        if (err) return reject(err);
+        resolve();
+      });
+    });
   });
 
   afterAll(async () => {
@@ -18,7 +42,7 @@ describe('Authentication API', () => {
 
   describe('POST /auth/login', () => {
     it('should login with valid credentials', async () => {
-      const response = await request(app)
+      const response = await request(testApp)
         .post('/auth/login')
         .send({
           username: 'testuser',
@@ -31,7 +55,7 @@ describe('Authentication API', () => {
     });
 
     it('should reject invalid credentials', async () => {
-      const response = await request(app)
+      const response = await request(testApp)
         .post('/auth/login')
         .send({
           username: 'testuser',
@@ -45,7 +69,7 @@ describe('Authentication API', () => {
 
   describe('POST /auth/register', () => {
     it('should register a new user', async () => {
-      const response = await request(app)
+      const response = await request(testApp)
         .post('/auth/register')
         .send({
           username: 'newuser',
@@ -58,7 +82,7 @@ describe('Authentication API', () => {
     });
 
     it('should reject duplicate username', async () => {
-      const response = await request(app)
+      const response = await request(testApp)
         .post('/auth/register')
         .send({
           username: 'testuser',

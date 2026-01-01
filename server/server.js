@@ -64,14 +64,14 @@ app.use((err, req, res, next) => {
   res.status(500).json({ error: 'Internal Server Error' });
 });
 
+app.use('/auth', require('./routes/auth'));
+app.use('/admin', require('./routes/admin'));
+app.use('/chat', require('./routes/chat'));
+
 // 404 handler
 app.use((req, res) => {
   res.status(404).json({ error: 'Not Found' });
 });
-
-app.use('/auth', require('./routes/auth'));
-app.use('/admin', require('./routes/admin'));
-app.use('/chat', require('./routes/chat'));
 
 // Make Socket.IO instance available to routes
 app.set('io', io);

@@ -39,7 +39,7 @@ router.post('/register', (req, res) => {
         }
         console.log(`User registered successfully: ${username} (Owner: ${isOwner})`);
         const token = jwt.sign({ id: this.lastID, username, isOwner }, JWT_SECRET);
-        res.json({ token, isOwner, id: this.lastID });
+        res.status(201).json({ token, user: { username, id: this.lastID, isOwner } });
       });
     });
   });
@@ -51,16 +51,16 @@ router.post('/login', (req, res) => {
   db.get('SELECT * FROM users WHERE username = ?', [username], (err, user) => {
     if (err || !user) {
       console.log(`Login failed for ${username}: User not found`);
-      return res.status(400).json({ error: 'Invalid credentials' });
+      return res.status(401).json({ error: 'Invalid credentials' });
     }
     bcrypt.compare(password, user.password, (err, match) => {
       if (!match) {
         console.log(`Login failed for ${username}: Invalid password`);
-        return res.status(400).json({ error: 'Invalid credentials' });
+        return res.status(401).json({ error: 'Invalid credentials' });
       }
       console.log(`User logged in successfully: ${username}`);
       const token = jwt.sign({ id: user.id, username, isOwner: user.is_owner }, JWT_SECRET);
-      res.json({ token, isOwner: user.is_owner, id: user.id });
+      res.json({ token, user: { username, id: user.id, isOwner: user.is_owner } });
     });
   });
 });

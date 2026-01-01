@@ -24,20 +24,22 @@
     "websocket"
   ],
   "dependencies": {
-    "express": "^4.18.2",
-    "socket.io": "^4.7.2",
-    "sqlite3": "^5.1.6",
     "bcryptjs": "^2.4.3",
-    "jsonwebtoken": "^9.0.2",
     "cors": "^2.8.5",
-    "multer": "^1.4.5-lts.1",
-    "helmet": "^7.1.0",
+    "express": "^4.18.2",
     "express-rate-limit": "^7.2.0",
+    "helmet": "^7.1.0",
+    "jsonwebtoken": "^9.0.2",
+    "multer": "^1.4.5-lts.1",
+    "node-fetch": "^3.3.2",
+    "socket.io": "^4.7.2",
+    "socket.io-client": "^4.8.3",
+    "sqlite3": "^5.1.6",
     "winston": "^3.11.0"
   },
   "devDependencies": {
-    "nodemon": "^3.0.1",
     "jest": "^29.7.0",
+    "nodemon": "^3.0.1",
     "supertest": "^6.3.3"
   }
 }
