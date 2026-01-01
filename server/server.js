@@ -23,7 +23,7 @@ app.use(express.static(path.join(__dirname, '../client')));
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
 app.use('/auth', require('./routes/auth'));
-app.use('/admin', require('./routes/admin')(io));
+app.use('/admin', require('./routes/admin'));
 app.use('/chat', require('./routes/chat'));
 
 io.on('connection', (socket) => {
