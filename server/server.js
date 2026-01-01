@@ -26,6 +26,9 @@ app.use('/auth', require('./routes/auth'));
 app.use('/admin', require('./routes/admin'));
 app.use('/chat', require('./routes/chat'));
 
+// Make Socket.IO instance available to routes
+app.set('io', io);
+
 io.on('connection', (socket) => {
   console.log('User connected:', socket.id);
 

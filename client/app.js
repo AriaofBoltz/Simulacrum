@@ -326,6 +326,11 @@ document.getElementById('showAdminBtn').onclick = () => {
   loadPending();
   loadGroupsAdmin();
   loadUsersAdmin();
+  loadServerStatus();
+  
+  // Start server status refresh interval
+  if (serverStatusInterval) clearInterval(serverStatusInterval);
+  serverStatusInterval = setInterval(loadServerStatus, 30000);
 
   // Add search event listeners
   document.getElementById('pendingSearch').addEventListener('input', filterAndDisplayPendings);
@@ -336,11 +341,18 @@ document.getElementById('showAdminBtn').onclick = () => {
 document.getElementById('closeAdminBtn').onclick = () => {
   document.getElementById('adminPanel').style.display = 'none';
   document.getElementById('main').style.display = 'flex';
+  
+  // Clear server status refresh interval
+  if (serverStatusInterval) {
+    clearInterval(serverStatusInterval);
+    serverStatusInterval = null;
+  }
 };
 
 let allPendings = [];
 let allGroups = [];
 let allUsers = [];
+let serverStatusInterval;
 
 function loadPending() {
   const ul = document.getElementById('pendingList');
@@ -484,6 +496,112 @@ function loadUsersAdmin() {
     ul.innerHTML = '<li style="text-align: center; color: #ff4444;"><em>Failed to load users</em></li>';
     console.error('Error loading users:', err);
   });
+}
+
+function loadServerStatus() {
+  const contentDiv = document.getElementById('serverStatusContent');
+  contentDiv.innerHTML = '<div class="status-loading">Loading server status...</div>';
+
+  fetch('/admin/server-status', {
+    headers: { 'Authorization': `Bearer ${token}` }
+  }).then(res => res.json()).then(status => {
+    displayServerStatus(status);
+  }).catch(err => {
+    contentDiv.innerHTML = '<div class="status-error">Failed to load server status</div>';
+    console.error('Error loading server status:', err);
+  });
+}
+
+function displayServerStatus(status) {
+  const contentDiv = document.getElementById('serverStatusContent');
+  
+  // Format uptime
+  const formatUptime = (seconds) => {
+    const days = Math.floor(seconds / (24 * 60 * 60));
+    const hours = Math.floor((seconds % (24 * 60 * 60)) / (60 * 60));
+    const minutes = Math.floor((seconds % (60 * 60)) / 60);
+    const secs = Math.floor(seconds % 60);
+    
+    let result = '';
+    if (days > 0) result += `${days}d `;
+    if (hours > 0) result += `${hours}h `;
+    if (minutes > 0) result += `${minutes}m `;
+    result += `${secs}s`;
+    return result;
+  };
+  
+  // Format bytes to human readable
+  const formatBytes = (bytes) => {
+    if (bytes < 1024) return bytes + ' B';
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(2) + ' KB';
+    if (bytes < 1024 * 1024 * 1024) return (bytes / (1024 * 1024)).toFixed(2) + ' MB';
+    return (bytes / (1024 * 1024 * 1024)).toFixed(2) + ' GB';
+  };
+  
+  // Calculate memory usage percentage
+  const memoryPercent = (status.memory.heapUsed / status.memory.heapTotal) * 100;
+  const cpuPercent = Math.min(100, status.cpu.load1 * 100 / os.cpus().length);
+  
+  const html = `
+    <div class="status-grid">
+      <div class="status-card">
+        <h4>Server Uptime</h4>
+        <div class="status-value">${formatUptime(status.uptime)}</div>
+      </div>
+      
+      <div class="status-card">
+        <h4>Memory Usage</h4>
+        <div class="status-value">${formatBytes(status.memory.heapUsed)} / ${formatBytes(status.memory.heapTotal)}</div>
+        <div class="status-bar">
+          <div class="status-bar-fill" style="width: ${memoryPercent}%; background-color: ${memoryPercent > 80 ? '#ff4444' : memoryPercent > 60 ? '#ffcc00' : '#4CAF50'}"></div>
+        </div>
+        <div class="status-percent">${memoryPercent.toFixed(1)}%</div>
+      </div>
+      
+      <div class="status-card">
+        <h4>CPU Load</h4>
+        <div class="status-value">${status.cpu.load1.toFixed(2)} (1 min avg)</div>
+        <div class="status-bar">
+          <div class="status-bar-fill" style="width: ${cpuPercent}%; background-color: ${cpuPercent > 80 ? '#ff4444' : cpuPercent > 60 ? '#ffcc00' : '#4CAF50'}"></div>
+        </div>
+        <div class="status-percent">${cpuPercent.toFixed(1)}%</div>
+      </div>
+      
+      <div class="status-card">
+        <h4>Active Connections</h4>
+        <div class="status-value">${status.connections}</div>
+      </div>
+    </div>
+    
+    <div class="status-section">
+      <h4>Database Statistics</h4>
+      <div class="stats-grid">
+        <div class="stat-item">
+          <span class="stat-label">Users:</span>
+          <span class="stat-value">${status.database.users}</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-label">Groups:</span>
+          <span class="stat-value">${status.database.groups}</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-label">Messages:</span>
+          <span class="stat-value">${status.database.messages}</span>
+        </div>
+      </div>
+    </div>
+    
+    <div class="status-section">
+      <h4>System Information</h4>
+      <div class="system-info">
+        <div><strong>Node.js:</strong> ${status.system.nodeVersion}</div>
+        <div><strong>Platform:</strong> ${status.system.platform} (${status.system.arch})</div>
+        <div><strong>CPU Cores:</strong> ${status.system.cpus}</div>
+      </div>
+    </div>
+  `;
+  
+  contentDiv.innerHTML = html;
 }
 
 function filterAndDisplayUsers() {

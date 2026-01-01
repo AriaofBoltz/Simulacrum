@@ -3,6 +3,7 @@ const auth = require('../middleware/auth');
 const db = require('../../database/db');
 const multer = require('multer');
 const path = require('path');
+const os = require('os');
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
@@ -128,6 +129,63 @@ router.post('/rename-group', auth, (req, res) => {
   db.run('UPDATE groups SET name = ? WHERE id = ?', [newName, groupId], (err) => {
     if (err) return res.status(500).json({ error: 'DB error' });
     res.json({ success: true });
+  });
+});
+
+// Server status endpoint
+router.get('/server-status', auth, (req, res) => {
+  if (!req.user.isOwner) return res.status(403).json({ error: 'Not owner' });
+  
+  // Get system metrics
+  const uptime = process.uptime();
+  const memoryUsage = process.memoryUsage();
+  const loadAvg = os.loadavg();
+  
+  // Get database statistics
+  const dbStats = {
+    users: 0,
+    groups: 0,
+    messages: 0
+  };
+  
+  // Query database counts
+  db.get('SELECT COUNT(*) as count FROM users', (err, row) => {
+    if (!err) dbStats.users = row.count;
+    
+    db.get('SELECT COUNT(*) as count FROM groups', (err, row) => {
+      if (!err) dbStats.groups = row.count;
+      
+      db.get('SELECT COUNT(*) as count FROM messages', (err, row) => {
+        if (!err) dbStats.messages = row.count;
+        
+        // Get active connections count
+        const io = req.app.get('io'); // Get Socket.IO instance
+        const activeConnections = io ? io.engine.clientsCount : 0;
+        
+        res.json({
+          uptime,
+          memory: {
+            rss: memoryUsage.rss,
+            heapTotal: memoryUsage.heapTotal,
+            heapUsed: memoryUsage.heapUsed,
+            external: memoryUsage.external
+          },
+          cpu: {
+            load1: loadAvg[0],
+            load5: loadAvg[1],
+            load15: loadAvg[2]
+          },
+          connections: activeConnections,
+          database: dbStats,
+          system: {
+            nodeVersion: process.version,
+            platform: os.platform(),
+            arch: os.arch(),
+            cpus: os.cpus().length
+          }
+        });
+      });
+    });
   });
 });
 
