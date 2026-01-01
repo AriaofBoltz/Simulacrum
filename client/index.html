@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>SIMULACRUM</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="login">
+    <h2>Login</h2>
+    <input type="text" id="username" placeholder="Username">
+    <input type="password" id="password" placeholder="Password">
+    <button id="loginBtn">Login</button>
+    <button id="registerBtn">Register</button>
+  </div>
+  <div id="notification" style="display:none; position:fixed; top:10px; right:10px; background:#ff4444; color:#fff; padding:10px; border-radius:5px; z-index:1000;"></div>
+  <div id="chat" style="display:none">
+    <div id="sidebar">
+      <h3>Users</h3>
+      <ul id="userList"></ul>
+      <h3>Groups</h3>
+      <ul id="groupList"></ul>
+      <input type="text" id="newGroup" placeholder="New group name">
+      <button id="createGroupBtn" class="menu-btn">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" style="width: 18px; height: 18px;">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+        </svg>
+        Create Group
+      </button>
+      <button id="profileBtn" class="menu-btn">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" style="width: 18px; height: 18px;">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
+        </svg>
+        My Profile
+      </button>
+      <div id="adminBtn" style="display:none">
+        <button id="showAdminBtn" class="menu-btn">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" style="width: 18px; height: 18px;">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M11.42 15.17 17.25 21A2.652 2.652 0 0 0 21 17.25l-5.877-5.877M11.42 15.17l2.496-3.03c.317-.384.74-.626 1.208-.766M11.42 15.17l-4.655 5.653a2.548 2.548 0 1 1-3.586-3.586l6.837-5.63m5.108-.233c.55-.164 1.163-.188 1.743-.14a4.5 4.5 0 0 0 4.486-6.336l-3.276 3.277a3.004 3.004 0 0 1-2.25-2.25l3.276-3.276a4.5 4.5 0 0 0-6.336 4.486c.091 1.076-.071 2.264-.904 2.95l-.102.085m-1.745 1.437L5.909 7.5H4.5L2.25 3.75l1.5-1.5L7.5 4.5v1.409l4.26 4.26m-1.745 1.437 1.745-1.437m6.615 8.206L15.75 15.75M4.867 19.125h.008v.008h-.008v-.008Z" />
+          </svg>
+          Admin Panel
+        </button>
+      </div>
+      <button id="logoutBtn" class="menu-btn">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" style="width: 18px; height: 18px;">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0 0 13.5 3h-6a2.25 2.25 0 0 0-2.25 2.25v13.5A2.25 2.25 0 0 0 7.5 21h6a2.25 2.25 0 0 0 2.25-2.25V15M12 9l-3 3m0 0 3 3m-3-3h12.75" />
+        </svg>
+        Logout
+      </button>
+    </div>
+    <div id="adminPanel" style="display:none">
+      <div class="admin-header">
+        <h2><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" style="width: 24px; height: 24px; margin-right: 10px;">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M11.42 15.17 17.25 21A2.652 2.652 0 0 0 21 17.25l-5.877-5.877M11.42 15.17l2.496-3.03c.317-.384.74-.626 1.208-.766M11.42 15.17l-4.655 5.653a2.548 2.548 0 1 1-3.586-3.586l6.837-5.63m5.108-.233c.55-.164 1.163-.188 1.743-.14a4.5 4.5 0 0 0 4.486-6.336l-3.276 3.277a3.004 3.004 0 0 1-2.25-2.25l3.276-3.276a4.5 4.5 0 0 0-6.336 4.486c.091 1.076-.071 2.264-.904 2.95l-.102.085m-1.745 1.437L5.909 7.5H4.5L2.25 3.75l1.5-1.5L7.5 4.5v1.409l4.26 4.26m-1.745 1.437 1.745-1.437m6.615 8.206L15.75 15.75M4.867 19.125h.008v.008h-.008v-.008Z" />
+        </svg>Admin Panel</h2>
+        <button id="closeAdminBtn" class="close-btn">×</button>
+      </div>
+      <div class="admin-content">
+        <div class="admin-section">
+          <div class="section-header">
+            <h3>Pending Memberships</h3>
+            <span id="pendingCount" class="count-badge">0</span>
+          </div>
+          <div class="search-container">
+            <input type="text" id="pendingSearch" placeholder="Search pending requests..." class="search-input">
+          </div>
+          <ul id="pendingList" class="admin-list"></ul>
+        </div>
+        <div class="admin-section">
+          <div class="section-header">
+            <h3>Group Management</h3>
+          </div>
+          <div class="search-container">
+            <input type="text" id="groupSearch" placeholder="Search groups..." class="search-input">
+          </div>
+          <ul id="groupManageList" class="admin-list"></ul>
+        </div>
+        <div class="admin-section">
+          <div class="section-header">
+            <h3>User Management</h3>
+          </div>
+          <div class="search-container">
+            <input type="text" id="userSearch" placeholder="Search users..." class="search-input">
+          </div>
+          <ul id="userManageList" class="admin-list"></ul>
+        </div>
+      </div>
+    </div>
+    <div id="profilePanel" style="display:none">
+      <div class="profile-header">
+        <div class="profile-user-info">
+          <div id="profileAvatar" class="profile-avatar-large"></div>
+          <div class="profile-user-details">
+            <h2 id="profileUsername">My Profile</h2>
+            <div id="profileStats" class="profile-stats">
+              <span id="memberSince">Member since: Loading...</span>
+            </div>
+          </div>
+        </div>
+        <button id="closeProfileBtn" class="close-btn">×</button>
+      </div>
+      <div class="profile-content">
+        <form id="profileForm" enctype="multipart/form-data">
+          <div class="form-group">
+            <label for="profilePicture">Profile Picture:</label>
+            <input type="file" id="profilePicture" name="profile_picture" accept="image/*">
+            <div id="imagePreview" class="image-preview">
+              <div id="currentPicture"></div>
+              <div id="newPicturePreview" style="display:none;"></div>
+            </div>
+            <small class="form-hint">Max file size: 5MB. Supported formats: JPG, PNG, GIF</small>
+          </div>
+          <div class="form-group">
+            <label for="profileDescription">Description:</label>
+            <textarea id="profileDescription" name="description" rows="4" placeholder="Tell others about yourself..."></textarea>
+            <small class="form-hint">Share a bit about yourself. This will be visible to other users.</small>
+          </div>
+          <div class="form-actions">
+            <button type="submit" id="saveProfileBtn">
+              <span id="saveBtnText">Save Profile</span>
+              <div id="saveBtnSpinner" class="spinner" style="display:none;"></div>
+            </button>
+            <button type="button" id="cancelProfileBtn" class="cancel-btn">Cancel</button>
+          </div>
+        </form>
+      </div>
+    </div>
+    <div id="main">
+      <div id="messages"></div>
+      <div id="inputArea">
+        <textarea id="messageInput" placeholder="Type a message" rows="1"></textarea>
+        <button id="sendBtn">Send</button>
+      </div>
+    </div>
+  </div>
+  <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
