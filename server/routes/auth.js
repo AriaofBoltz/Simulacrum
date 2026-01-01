@@ -24,8 +24,11 @@ const upload = multer({ storage });
 
 router.post('/register', (req, res) => {
   const { username, password } = req.body;
-  console.log(`User registration attempt: ${username}`);
-  if (!username || !password) return res.status(400).json({ error: 'Username and password required' });
+  console.log(`[AUTH] User registration attempt: ${username}`);
+  if (!username || !password) {
+    console.log(`[AUTH] Registration failed for ${username}: Missing credentials`);
+    return res.status(400).json({ error: 'Username and password required' });
+  }
 
   db.get('SELECT COUNT(*) as count FROM users', (err, row) => {
     if (err) return res.status(500).json({ error: 'Database error' });

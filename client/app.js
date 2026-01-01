@@ -39,13 +39,18 @@ document.getElementById('loginBtn').onclick = () => {
   const btn = document.getElementById('loginBtn');
   btn.disabled = true;
   btn.textContent = 'Logging in...';
+  console.log('Login button clicked, sending request to /auth/login');
   fetch('/auth/login', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ username, password })
-  }).then(res => res.json()).then(data => {
+  }).then(res => {
+    console.log('Login response status:', res.status);
+    return res.json();
+  }).then(data => {
     btn.disabled = false;
     btn.textContent = 'Login';
+    console.log('Login response data:', data);
     if (data.token) {
       localStorage.setItem('token', data.token);
       localStorage.setItem('isOwner', data.user.isOwner ? 'true' : 'false');
@@ -65,7 +70,8 @@ document.getElementById('loginBtn').onclick = () => {
     } else {
       showNotification(data.error);
     }
-  }).catch(() => {
+  }).catch(err => {
+    console.error('Login error:', err);
     btn.disabled = false;
     btn.textContent = 'Login';
     showNotification('Login failed');
@@ -78,13 +84,18 @@ document.getElementById('registerBtn').onclick = () => {
   const btn = document.getElementById('registerBtn');
   btn.disabled = true;
   btn.textContent = 'Registering...';
+  console.log('Register button clicked, sending request to /auth/register');
   fetch('/auth/register', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ username, password })
-  }).then(res => res.json()).then(data => {
+  }).then(res => {
+    console.log('Register response status:', res.status);
+    return res.json();
+  }).then(data => {
     btn.disabled = false;
     btn.textContent = 'Register';
+    console.log('Register response data:', data);
     if (data.token) {
       localStorage.setItem('token', data.token);
       localStorage.setItem('isOwner', data.user.isOwner ? 'true' : 'false');
@@ -104,7 +115,8 @@ document.getElementById('registerBtn').onclick = () => {
     } else {
       showNotification(data.error);
     }
-  }).catch(() => {
+  }).catch(err => {
+    console.error('Register error:', err);
     btn.disabled = false;
     btn.textContent = 'Register';
     showNotification('Registration failed');
@@ -315,7 +327,7 @@ function closeProfilePanel() {
 document.getElementById('profilePicture').addEventListener('change', (e) => {
   const file = e.target.files[0];
   const previewDiv = document.getElementById('newPicturePreview');
-
+  
   if (file) {
     const reader = new FileReader();
     reader.onload = (e) => {
@@ -345,7 +357,7 @@ document.getElementById('showAdminBtn').onclick = () => {
   // Start server status refresh interval
   if (serverStatusInterval) clearInterval(serverStatusInterval);
   serverStatusInterval = setInterval(loadServerStatus, 30000);
-
+  
   // Add search event listeners
   document.getElementById('pendingSearch').addEventListener('input', filterAndDisplayPendings);
   document.getElementById('groupSearch').addEventListener('input', filterAndDisplayGroups);
@@ -371,7 +383,7 @@ let serverStatusInterval;
 function loadPending() {
   const ul = document.getElementById('pendingList');
   ul.innerHTML = '<li style="text-align: center; color: #888;"><em>Loading...</em></li>';
-
+  
   fetch('/admin/pending-memberships', {
     headers: { 'Authorization': `Bearer ${token}` }
   }).then(res => res.json()).then(pendings => {
@@ -390,10 +402,10 @@ function filterAndDisplayPendings() {
     p.username.toLowerCase().includes(searchTerm) ||
     p.group_name.toLowerCase().includes(searchTerm)
   );
-
+  
   const ul = document.getElementById('pendingList');
   ul.innerHTML = '';
-
+  
   if (filtered.length === 0) {
     const li = document.createElement('li');
     li.innerHTML = '<em>No pending requests found</em>';
@@ -402,7 +414,7 @@ function filterAndDisplayPendings() {
     ul.appendChild(li);
     return;
   }
-
+  
   filtered.forEach(p => {
     const li = document.createElement('li');
     li.innerHTML = `
@@ -453,7 +465,7 @@ function reject(groupId, userId) {
 function loadGroupsAdmin() {
   const ul = document.getElementById('groupManageList');
   ul.innerHTML = '<li style="text-align: center; color: #888;"><em>Loading...</em></li>';
-
+  
   fetch('/chat/groups', {
     headers: { 'Authorization': `Bearer ${token}` }
   }).then(res => res.json()).then(groups => {
@@ -468,10 +480,10 @@ function loadGroupsAdmin() {
 function filterAndDisplayGroups() {
   const searchTerm = document.getElementById('groupSearch').value.toLowerCase();
   const filtered = allGroups.filter(g => g.name.toLowerCase().includes(searchTerm));
-
+  
   const ul = document.getElementById('groupManageList');
   ul.innerHTML = '';
-
+  
   if (filtered.length === 0) {
     const li = document.createElement('li');
     li.innerHTML = '<em>No groups found</em>';
@@ -480,7 +492,7 @@ function filterAndDisplayGroups() {
     ul.appendChild(li);
     return;
   }
-
+  
   filtered.forEach(group => {
     const li = document.createElement('li');
     li.innerHTML = `
@@ -500,7 +512,7 @@ function filterAndDisplayGroups() {
 function loadUsersAdmin() {
   const ul = document.getElementById('userManageList');
   ul.innerHTML = '<li style="text-align: center; color: #888;"><em>Loading...</em></li>';
-
+  
   fetch('/admin/users', {
     headers: { 'Authorization': `Bearer ${token}` }
   }).then(res => res.json()).then(users => {
@@ -515,7 +527,7 @@ function loadUsersAdmin() {
 function loadServerStatus() {
   const contentDiv = document.getElementById('serverStatusContent');
   contentDiv.innerHTML = '<div class="status-loading">Loading server status...</div>';
-
+  
   fetch('/admin/server-status', {
     headers: { 'Authorization': `Bearer ${token}` }
   }).then(res => res.json()).then(status => {
@@ -621,10 +633,10 @@ function displayServerStatus(status) {
 function filterAndDisplayUsers() {
   const searchTerm = document.getElementById('userSearch').value.toLowerCase();
   const filtered = allUsers.filter(u => u.username.toLowerCase().includes(searchTerm));
-
+  
   const ul = document.getElementById('userManageList');
   ul.innerHTML = '';
-
+  
   if (filtered.length === 0) {
     const li = document.createElement('li');
     li.innerHTML = '<em>No users found</em>';
@@ -633,7 +645,7 @@ function filterAndDisplayUsers() {
     ul.appendChild(li);
     return;
   }
-
+  
   filtered.forEach(user => {
     const li = document.createElement('li');
     const isCurrentUser = user.id == currentUserId;
@@ -645,7 +657,7 @@ function filterAndDisplayUsers() {
       <div class="actions">
         ${isCurrentUser ? '<span class="current-user">You</span>' :
          `<button class="edit" onclick="editUserTitle(${user.id}, '${user.username}', '${user.title || ''}', '${user.title_color || '#ffffff'}')">Edit Title</button>
-          <button class="edit" onclick="editUserProfile(${user.id}, '${user.username}', '${user.profile_picture || ''}', '${(user.description || '').replace(/'/g, "\\'")}')">Edit Profile</button>
+          <button class="edit" onclick="editUserProfile(${user.id}, '${user.username}', '${user.profile_picture || ''}', '${(user.description || '').replace(/'/g, "\'")}')">Edit Profile</button>
           <button class="delete" onclick="deleteUser(${user.id}, '${user.username}')">Delete</button>`}
       </div>
     `;
@@ -675,7 +687,7 @@ function deleteGroup(groupId) {
   // Get group name for better confirmation
   const group = allGroups.find(g => g.id === groupId);
   const groupName = group ? group.name : 'this group';
-
+  
   if (confirm(`Are you sure you want to delete the group "${groupName}"?\n\nThis action cannot be undone and will:\n• Delete all messages in the group\n• Remove all memberships\n• Permanently delete the group`)) {
     fetch('/admin/delete-group', {
       method: 'POST',
