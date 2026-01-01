@@ -1,4 +1,5 @@
-https://img.shields.io/badge/Node.js-339933?style=flat&logo=node.js&logoColor=white
+[![Node.js](https://img.shields.io/badge/Node.js-339933?style=for-the-badge&logo=node.js&logoColor=white)](https://nodejs.org/)
+
 # Simple Self-Hosted Messaging System
 
 A stylish, real-time messaging system with web browser clients, supporting private messages, group chats, and user titles with custom colors.
