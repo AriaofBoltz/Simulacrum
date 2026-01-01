@@ -64,22 +64,22 @@ router.get('/messages', auth, (req, res) => {
 
   if (type === 'private') {
     query = `
-      SELECT m.id, u.username as sender, m.content, m.timestamp
+      SELECT m.id, u.username as sender, m.content, m.created_at as timestamp
       FROM messages m
       JOIN users u ON m.sender_id = u.id
       WHERE ((m.sender_id = ? AND m.receiver_id = ?) OR (m.sender_id = ? AND m.receiver_id = ?))
       AND m.group_id IS NULL
-      ORDER BY m.timestamp DESC
+      ORDER BY m.created_at DESC
       LIMIT 50
     `;
     params = [userId, targetId, targetId, userId];
   } else if (type === 'group') {
     query = `
-      SELECT m.id, u.username as sender, m.content, m.timestamp
+      SELECT m.id, u.username as sender, m.content, m.created_at as timestamp
       FROM messages m
       JOIN users u ON m.sender_id = u.id
       WHERE m.group_id = ?
-      ORDER BY m.timestamp DESC
+      ORDER BY m.created_at DESC
       LIMIT 50
     `;
     params = [targetId];
@@ -91,6 +91,11 @@ router.get('/messages', auth, (req, res) => {
     if (err) {
       console.log('DB error in messages:', err);
       return res.status(500).json({ error: 'DB error' });
+    }
+    // Ensure rows is an array before reversing
+    if (!Array.isArray(rows)) {
+      console.log('Invalid rows data:', rows);
+      return res.status(500).json({ error: 'Invalid data format' });
     }
     // Reverse to show oldest first
     res.json(rows.reverse());

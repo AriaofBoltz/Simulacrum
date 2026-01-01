@@ -202,7 +202,26 @@ function loadGroups() {
 function loadMessages(type, targetId) {
   fetch(`/chat/messages?type=${type}&targetId=${targetId}`, {
     headers: { 'Authorization': `Bearer ${token}` }
-  }).then(res => res.json()).then(messages => {
+  }).then(res => {
+    if (!res.ok) {
+      throw new Error(`Server error: ${res.status}`);
+    }
+    return res.json();
+  }).then(messages => {
+    // Check if messages is an array
+    if (!Array.isArray(messages)) {
+      console.error('Invalid messages data:', messages);
+      const div = document.createElement('div');
+      div.className = 'error-message';
+      div.textContent = 'Failed to load messages. Please try again.';
+      div.style.textAlign = 'center';
+      div.style.color = '#ff4444';
+      div.style.fontStyle = 'italic';
+      div.style.padding = '20px';
+      document.getElementById('messages').prepend(div);
+      return;
+    }
+    
     if (messages.length === 0) {
       const div = document.createElement('div');
       div.className = 'no-messages';
@@ -217,7 +236,17 @@ function loadMessages(type, targetId) {
         addMessage(msg.sender, msg.content, new Date(msg.timestamp));
       });
     }
-  }).catch(err => console.error('Error loading messages:', err));
+  }).catch(err => {
+    console.error('Error loading messages:', err);
+    const div = document.createElement('div');
+    div.className = 'error-message';
+    div.textContent = 'Failed to load messages. Please try again.';
+    div.style.textAlign = 'center';
+    div.style.color = '#ff4444';
+    div.style.fontStyle = 'italic';
+    div.style.padding = '20px';
+    document.getElementById('messages').prepend(div);
+  });
 }
 
 function selectTarget(type, id, name) {
@@ -566,7 +595,7 @@ function displayServerStatus(status) {
   
   // Calculate memory usage percentage
   const memoryPercent = (status.memory.heapUsed / status.memory.heapTotal) * 100;
-  const cpuPercent = Math.min(100, status.cpu.load1 * 100 / os.cpus().length);
+  const cpuPercent = Math.min(100, status.cpu.load1 * 100 / status.system.cpus);
   
   const html = `
     <div class="status-grid">
