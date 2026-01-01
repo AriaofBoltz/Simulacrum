@@ -42,3 +42,8 @@ dist/
 .Trashes
 ehthumbs.db
 Thumbs.db
+# txt
+iconsSVG.txt
+# md
+RELEASE_CHECKLIST.md
+start_bat_workflow.md
