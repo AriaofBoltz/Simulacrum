@@ -1,0 +1,165 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    name: Run Tests
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [18.x, 20.x]
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ matrix.node-version }}
+        cache: 'npm'
+
+    - name: Install dependencies
+      run: npm ci
+
+    - name: Create test environment
+      run: |
+        mkdir -p database uploads logs
+        cp .env.example .env.test
+        echo "JWT_SECRET=test-secret-for-ci" >> .env.test
+
+    - name: Run tests
+      run: npm test
+
+    - name: Run tests with coverage
+      run: npm run test:coverage
+
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v3
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
+        files: ./coverage/lcov.info
+
+  build:
+    name: Build and Package
+    needs: test
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: 20.x
+        cache: 'npm'
+
+    - name: Install dependencies
+      run: npm ci
+
+    - name: Build project
+      run: |
+        mkdir -p dist
+        cp -r server client database uploads dist/
+        cp package.json package-lock.json .env.example dist/
+
+    - name: Create release artifact
+      run: |
+        tar -czvf messaging-system-${{ github.sha }}.tar.gz dist/
+        echo "RELEASE_ASSET=messaging-system-${{ github.sha }}.tar.gz" >> $GITHUB_ENV
+
+    - name: Upload release artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: messaging-system-release
+        path: ${{ env.RELEASE_ASSET }}
+
+  deploy:
+    name: Deploy to Production
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+
+    steps:
+    - name: Download release artifact
+      uses: actions/download-artifact@v3
+      with:
+        name: messaging-system-release
+
+    - name: Deploy to production server
+      uses: appleboy/scp-action@v0.1.4
+      with:
+        host: ${{ secrets.PRODUCTION_HOST }}
+        username: ${{ secrets.PRODUCTION_USER }}
+        key: ${{ secrets.PRODUCTION_SSH_KEY }}
+        source: "messaging-system-${{ github.sha }}.tar.gz"
+        target: "/tmp/"
+
+    - name: Extract and restart service
+      uses: appleboy/ssh-action@v0.1.10
+      with:
+        host: ${{ secrets.PRODUCTION_HOST }}
+        username: ${{ secrets.PRODUCTION_USER }}
+        key: ${{ secrets.PRODUCTION_SSH_KEY }}
+        script: |
+          cd /opt/messaging-system
+          tar -xzvf /tmp/messaging-system-${{ github.sha }}.tar.gz -C /opt/
+          mv /opt/dist /opt/messaging-system-new
+          mv /opt/messaging-system /opt/messaging-system-old
+          mv /opt/messaging-system-new /opt/messaging-system
+          cd /opt/messaging-system
+          npm install --production
+          pm2 restart messaging-system
+          pm2 save
+
+  release:
+    name: Create GitHub Release
+    needs: deploy
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Create Release
+      id: create_release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: v1.0.0
+        release_name: Release v1.0.0
+        body: |
+          ## First Official Release
+          
+          This is the first official release of the Simple Messaging System!
+          
+          ### Features
+          - User authentication with JWT
+          - Real-time private and group messaging
+          - Admin panel for user management
+          - File uploads for profile pictures
+          - Responsive UI design
+          
+          ### Changes
+          - Initial release with core functionality
+          - Security enhancements (helmet, rate limiting)
+          - Comprehensive logging with Winston
+          - Environment variable configuration
+          - CI/CD pipeline setup
+        draft: false
+        prerelease: false
+
+    - name: Upload Release Asset
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: messaging-system-${{ github.sha }}.tar.gz
+        asset_name: messaging-system-v1.0.0.tar.gz
+        asset_content_type: application/gzip

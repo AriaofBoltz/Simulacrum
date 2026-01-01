@@ -1,0 +1,44 @@
+# Dependencies
+node_modules/
+
+# Database
+database/chat.db
+
+# Uploads
+uploads/
+
+# Environment files
+.env
+.env.local
+.env.development
+.env.test
+.env.production
+
+# Logs
+logs
+*.log
+
+# Runtime data
+tmp
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Build output
+build/
+dist/
+
+# IDE
+.idea/
+*.swp
+*.swo
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db

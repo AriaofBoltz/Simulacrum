@@ -25,7 +25,9 @@ A stylish, real-time messaging system with web browser clients, supporting priva
    npm install
    ```
 
-4. Start the server:
+4. **Windows Users (Recommended)**: Double-click `start.bat` to automatically install dependencies, check for updates, and start the server.
+
+4. **Manual Start**:
    ```
    npm start
    ```
