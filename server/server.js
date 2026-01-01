@@ -21,8 +21,33 @@ const logger = winston.createLogger({
     new winston.transports.File({ filename: process.env.LOG_FILE || 'logs/app.log' })
   ],
   exceptionHandlers: [
-    new winston.transports.File({ filename: 'logs/exceptions.log' })
+    new winston.transports.File({ filename: 'logs/exceptions.log' }),
+    new winston.transports.Console()
   ]
+});
+
+// Override Winston's exception handler to also use our crash logger
+const originalExceptionHandlers = logger.exceptionHandlers;
+logger.exceptionHandlers = [
+  new winston.transports.File({
+    filename: 'logs/exceptions.log',
+    format: winston.format.combine(
+      winston.format.timestamp(),
+      winston.format.json()
+    )
+  }),
+  new winston.transports.Console()
+];
+
+// Add our custom crash logger for uncaught exceptions
+process.on('uncaughtException', (error) => {
+  const { logCrash } = require('./utils/crashLogger');
+  logCrash(error, { type: 'uncaughtException' });
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  const { logCrash } = require('./utils/crashLogger');
+  logCrash(reason, { type: 'unhandledRejection', promise: promise.toString() });
 });
 
 const app = express();
@@ -66,7 +91,19 @@ app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
 // Error handling middleware
 app.use((err, req, res, next) => {
+  const { logCrash } = require('./utils/crashLogger');
+  
+  // Log the crash with title and funny message
+  const crashLog = logCrash(err, {
+    status: err.status || 500,
+    url: req.originalUrl,
+    method: req.method,
+    ip: req.ip
+  });
+  
+  // Also log to Winston
   logger.error(`${err.status || 500} - ${err.message} - ${req.originalUrl} - ${req.method} - ${req.ip}`);
+  
   res.status(500).json({ error: 'Internal Server Error' });
 });
 
@@ -133,3 +170,8 @@ const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
+
+// Initialize console commands
+const ConsoleCommands = require('./console');
+const consoleCommands = new ConsoleCommands(server, app);
+consoleCommands.start();

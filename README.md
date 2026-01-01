@@ -138,6 +138,28 @@ npm run test:coverage
   - Headers: `Authorization: Bearer <token>`
   - Body: `{ "userId": 2, "title": "Moderator", "color": "#ff0000" }`
 
+### Console Commands
+
+The server supports console commands for administration. After starting the server, you can use the following commands:
+
+- `setOwner <username>` - Set a user as an owner (admin)
+- `DeleteUser <username>` - Delete a user from the system
+- `Exit` - Gracefully shut down the server
+- `help` - Show this help message
+
+Example usage:
+```
+> setOwner john_doe
+User "john_doe" is now an owner.
+
+> DeleteUser spam_user
+User "spam_user" has been deleted.
+
+> Exit
+Shutting down server...
+Server closed.
+```
+
 ## Security Notes
 
 - Change the JWT_SECRET in production.
