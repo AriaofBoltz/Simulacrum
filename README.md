@@ -25,10 +25,16 @@ A stylish, real-time messaging system with web browser clients, supporting priva
    npm install
    ```
 
-4. **Windows Users (Recommended)**: Double-click `start.bat` to automatically install dependencies, check for updates, and start the server.
+4. **Windows Users (Recommended)**:
+   - **Option 1**: Double-click `start.bat` to automatically install dependencies, check for updates, and start the server.
+   - **Option 2**: Double-click `install.bat` to install dependencies, then run `start.bat` or `npm start`.
 
-4. **Manual Start**:
-   ```
+4. **Manual Installation & Start**:
+   ```bash
+   # First, install all dependencies
+   npm install
+   
+   # Then start the server
    npm start
    ```
 
@@ -71,6 +77,59 @@ A stylish, real-time messaging system with web browser clients, supporting priva
 2. Login with your credentials.
 3. Select a user from the list for private chat or create/join a group.
 4. Send messages in real-time.
+
+## Troubleshooting
+
+### "Cannot find module" errors
+
+If you see errors like `Cannot find module 'helmet'` or similar:
+
+1. **Run the start.bat file** (Windows) - It will automatically install all dependencies
+2. **Manual fix**: Run `npm install` to install all required dependencies
+3. **Clear cache**: If issues persist, try:
+   ```bash
+   npm cache clean --force
+   rm -rf node_modules package-lock.json
+   npm install
+   ```
+
+### Server won't start
+
+- Check that Node.js is installed: `node --version`
+- Verify all dependencies are installed: `npm list`
+- Check for port conflicts: Try a different port in your .env file
+- Review error logs in the `logs/` directory
+
+### Database issues
+
+- Ensure the `database/` directory exists and is writable
+- Check file permissions
+- The SQLite database will be created automatically on first run
+
+### Connection problems
+
+- Verify CORS settings in your .env file
+- Check firewall settings
+- Ensure the server port is open and accessible
+
+## Common Commands
+
+```bash
+# Install dependencies
+npm install
+
+# Start server
+npm start
+
+# Start server with auto-restart (development)
+npm run dev
+
+# Run tests
+npm test
+
+# Run tests with coverage
+npm run test:coverage
+```
 
 ### Server Owner Features
 

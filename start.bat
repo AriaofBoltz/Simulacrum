@@ -65,22 +65,45 @@ if exist .git (
     echo.
 )
 
-:: Check if node_modules directory exists
-if not exist node_modules (
-    echo 📦 Installing dependencies (this may take a few minutes)...
-    npm install
-    
-    if %ERRORLEVEL% neq 0 (
-        echo ❌ Error: Failed to install dependencies
-        echo Please check your internet connection and try again
-        pause
-        exit /b 1
+:: Always check for dependency updates
+if exist package-lock.json (
+    :: Check if node_modules is up to date by comparing timestamps
+    for %%F in (package-lock.json) do set "lock_time=%%~tF"
+    if exist node_modules (
+        for /f "delims=" %%D in ('dir /ad /tw node_modules ^| find "node_modules"') do set "modules_time=%%D"
+        :: If node_modules is older than package-lock.json, reinstall
+        if "!modules_time!" lss "!lock_time!" (
+            echo 📦 Dependencies outdated. Updating...
+            npm install
+            if !ERRORLEVEL! neq 0 (
+                echo ❌ Error: Failed to update dependencies
+                echo Please check your internet connection and try again
+                pause
+                exit /b 1
+            )
+            echo ✅ Dependencies updated successfully
+            echo.
+        ) else (
+            echo 📦 Dependencies up to date
+            echo.
+        )
+    ) else (
+        echo 📦 Installing dependencies (this may take a few minutes)...
+        npm install
+        if !ERRORLEVEL! neq 0 (
+            echo ❌ Error: Failed to install dependencies
+            echo Please check your internet connection and try again
+            pause
+            exit /b 1
+        )
+        echo ✅ Dependencies installed successfully
+        echo.
     )
-    echo ✅ Dependencies installed successfully
-    echo.
 ) else (
-    echo 📦 Dependencies already installed
-    echo.
+    echo ❌ Error: package-lock.json not found
+    echo Please run 'npm install' first to set up the project
+    pause
+    exit /b 1
 )
 
 :: Create required directories if they don't exist
